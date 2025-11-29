@@ -32,7 +32,7 @@ const SignUp = () => {
       return;
     }
 
-    // kjdhdjksfhjksf
+   
     try {
       const imageURL = await imageUpload(imageFile);
 

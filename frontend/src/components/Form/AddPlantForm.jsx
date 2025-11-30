@@ -3,10 +3,12 @@ import { imageUpload } from "../../utils";
 import useAuth from "../../hooks/useAuth";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import LoadingSpinner from "../Shared/LoadingSpinner";
+// import LoadingSpinner from "../Shared/LoadingSpinner";
 import ErrorPage from "../../pages/ErrorPage";
 import toast from "react-hot-toast";
 import { TbFidgetSpinner } from "react-icons/tb";
+// import { ImSpinner9 } from "react-icons/im";
+
 
 const AddPlantForm = () => {
   const { user } = useAuth();
@@ -74,7 +76,7 @@ const AddPlantForm = () => {
     // console.table(plantData);
   };
 
-  if (isPending) return <LoadingSpinner></LoadingSpinner>;
+  // if (isPending) return <LoadingSpinner></LoadingSpinner>;
 
   if (isError) return <ErrorPage></ErrorPage>;
 

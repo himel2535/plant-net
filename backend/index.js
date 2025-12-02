@@ -55,6 +55,7 @@ async function run() {
     // --collection plants making--
     const db = client.db("plantsDB");
     const plantsCollection = db.collection("plants");
+    const ordersCollection = db.collection("orders");
 
     // --create plant from seller--
     app.post("/plants", async (req, res) => {
@@ -81,28 +82,36 @@ async function run() {
     app.post("/create-checkout-session", async (req, res) => {
       const paymentInfo = req.body;
 
-    app.post('/payment-success',async(req,res)=>{
-      const {sessionId}=req.body
-       const session = await stripe.checkout.sessions.retrieve(sessionId);
+      app.post("/payment-success", async (req, res) => {
+        const { sessionId } = req.body;
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-      const plant=await plantsCollection.findOne({_id:new ObjectId(session.metadata.plantId)})
+        const plant = await plantsCollection.findOne({
+          _id: new ObjectId(session.metadata.plantId),
+        });
 
-      if(session.status==='complete'){
-        // save order data in db
-        const orderInfo={
-          plantId:session.metadata.plantId,
-          transactionId:session.payment_intent,
-          customer:session.metadata.customer,
-          status:'pending',
-          seller:plant.seller,
-          name:plant.name,
-          category:plant.category,
-          quantity:1,
-          price:session.amount_total/100,
+        const order=await ordersCollection.findOne({
+          transactionId:session.payment_intent
+        })
+
+        if (session.status === "complete" && plant && !order) {
+          // save order data in db
+          const orderInfo = {
+            plantId: session.metadata.plantId,
+            transactionId: session.payment_intent,
+            customer: session.metadata.customer,
+            status: "pending",
+            seller: plant.seller,
+            name: plant.name,
+            category: plant.category,
+            quantity: 1,
+            price: session.amount_total / 100,
+          };
+          console.log(orderInfo);
+          const result=await ordersCollection.insertOne(orderInfo)
         }
-        console.log(orderInfo);
-      }
-    })
+        res.send(plant)
+      });
 
       // --session for payment--
       const session = await stripe.checkout.sessions.create({

@@ -79,37 +79,59 @@ async function run() {
 
     // --payment integration---
     app.post("/create-checkout-session", async (req, res) => {
-      const paymentInfo = req.body;    
+      const paymentInfo = req.body;
 
-      // --session for payment-- 
-      const session=await stripe.checkout.sessions.create({
-         success_url: 'https://example.com/success',
-        line_items:[
+    app.post('/payment-success',async(req,res)=>{
+      const {sessionId}=req.body
+       const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      const plant=await plantsCollection.findOne({_id:new ObjectId(session.metadata.plantId)})
+
+      if(session.status==='complete'){
+        // save order data in db
+        const orderInfo={
+          plantId:session.metadata.plantId,
+          transactionId:session.payment_intent,
+          customer:session.metadata.customer,
+          status:'pending',
+          seller:plant.seller,
+          name:plant.name,
+          category:plant.category,
+          quantity:1,
+          price:session.amount_total/100,
+        }
+        console.log(orderInfo);
+      }
+    })
+
+      // --session for payment--
+      const session = await stripe.checkout.sessions.create({
+        success_url: "https://example.com/success",
+        line_items: [
           {
-            price_data:{
-              currency:'usd',
-              product_data:{
-                name:paymentInfo?.name,
-                description:paymentInfo?.description,
-                images:[paymentInfo?.image],
-
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: paymentInfo?.name,
+                description: paymentInfo?.description,
+                images: [paymentInfo?.image],
               },
-              unit_amount:paymentInfo?.price*100,
+              unit_amount: paymentInfo?.price * 100,
             },
-            quantity:paymentInfo?.quantity
-          }
+            quantity: paymentInfo?.quantity,
+          },
         ],
-        customer_email:paymentInfo?.customer?.email,
+        customer_email: paymentInfo?.customer?.email,
 
-        mode:'payment',
-        metadata:{
-          plantId:paymentInfo?.plantId,
-          customer:paymentInfo?.customer.email,
+        mode: "payment",
+        metadata: {
+          plantId: paymentInfo?.plantId,
+          customer: paymentInfo?.customer.email,
         },
-        success_url:`${process.env.CLIENT_DOMAIN}/payment-success`,
-        cancel_url:`${process.env.CLIENT_DOMAIN}/plant/${paymentInfo?.plantId}`
-      })
-      res.send({url:session.url})
+        success_url: `${process.env.CLIENT_DOMAIN}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.CLIENT_DOMAIN}/plant/${paymentInfo?.plantId}`,
+      });
+      res.send({ url: session.url });
     });
 
     // Send a ping to confirm a successful connection

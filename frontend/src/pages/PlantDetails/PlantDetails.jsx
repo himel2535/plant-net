@@ -15,7 +15,7 @@ const PlantDetails = () => {
   const {
     data: plant = {},
     isLoading,
-    refetch,
+    // refetch,
   } = useQuery({
     queryKey: ["plant", id],
     queryFn: async () => {

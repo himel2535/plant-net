@@ -90,9 +90,9 @@ async function run() {
           _id: new ObjectId(session.metadata.plantId),
         });
 
-        const order=await ordersCollection.findOne({
-          transactionId:session.payment_intent
-        })
+        const order = await ordersCollection.findOne({
+          transactionId: session.payment_intent,
+        });
 
         if (session.status === "complete" && plant && !order) {
           // save order data in db
@@ -107,11 +107,29 @@ async function run() {
             quantity: 1,
             price: session.amount_total / 100,
           };
-          console.log(orderInfo);
-          const result=await ordersCollection.insertOne(orderInfo)
+
+          const result = await ordersCollection.insertOne(orderInfo);
+
+          // --update-
+          await plantsCollection.updateOne(
+            {
+              _id: new ObjectId(session.metadata.plantId),
+            },
+            { $inc: { quantity: -1 } }
+          );
+          return res.send({
+            transactionId: session.payment_intent,
+            orderId: result.insertedId,
+          });
         }
-        res.send(plant)
+        res.send(
+          res.send({
+            transactionId: session.payment_intent,
+            orderId: order._id,
+          })
+        );
       });
+      
 
       // --session for payment--
       const session = await stripe.checkout.sessions.create({

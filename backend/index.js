@@ -106,6 +106,7 @@ async function run() {
             category: plant.category,
             quantity: 1,
             price: session.amount_total / 100,
+            image: plant?.image,
           };
 
           const result = await ordersCollection.insertOne(orderInfo);
@@ -170,14 +171,18 @@ async function run() {
     // --get all manage orders for a seller by email--
     app.get("/manage-orders/:email", async (req, res) => {
       const email = req.params.email;
-      const result = await ordersCollection.find({ 'seller.email': email }).toArray();
+      const result = await ordersCollection
+        .find({ "seller.email": email })
+        .toArray();
       res.send(result);
     });
 
     // --get all plants for a seller by email--
     app.get("/my-inventory/:email", async (req, res) => {
       const email = req.params.email;
-      const result = await plantsCollection.find({ 'seller.email': email }).toArray();
+      const result = await plantsCollection
+        .find({ "seller.email": email })
+        .toArray();
       res.send(result);
     });
 

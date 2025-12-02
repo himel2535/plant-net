@@ -129,7 +129,6 @@ async function run() {
           })
         );
       });
-      
 
       // --session for payment--
       const session = await stripe.checkout.sessions.create({
@@ -159,6 +158,27 @@ async function run() {
         cancel_url: `${process.env.CLIENT_DOMAIN}/plant/${paymentInfo?.plantId}`,
       });
       res.send({ url: session.url });
+    });
+
+    // --get all orders for a customer by email--
+    app.get("/my-orders/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await ordersCollection.find({ customer: email }).toArray();
+      res.send(result);
+    });
+
+    // --get all manage orders for a seller by email--
+    app.get("/manage-orders/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await ordersCollection.find({ 'seller.email': email }).toArray();
+      res.send(result);
+    });
+
+    // --get all plants for a seller by email--
+    app.get("/my-inventory/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await plantsCollection.find({ 'seller.email': email }).toArray();
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection

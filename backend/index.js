@@ -57,6 +57,7 @@ async function run() {
     const plantsCollection = db.collection("plants");
     const ordersCollection = db.collection("orders");
     const usersCollection = db.collection("users");
+    const sellerRequestsCollection = db.collection("sellerRequests");
 
     // --create plant from seller--
     app.post("/plants", async (req, res) => {
@@ -163,9 +164,10 @@ async function run() {
     });
 
     // --get all orders for a customer by email--
-    app.get("/my-orders",verifyJWT, async (req, res) => {
-
-      const result = await ordersCollection.find({ customer: req.tokenEmail}).toArray();
+    app.get("/my-orders", verifyJWT, async (req, res) => {
+      const result = await ordersCollection
+        .find({ customer: req.tokenEmail })
+        .toArray();
       res.send(result);
     });
 
@@ -221,6 +223,20 @@ async function run() {
     app.get("/user/role", verifyJWT, async (req, res) => {
       const result = await usersCollection.findOne({ email: req.tokenEmail });
       res.send({ role: result?.role });
+    });
+
+    // save become seller request-->
+    app.post("/become-seller", verifyJWT, async (req, res) => {
+      const email = req.tokenEmail;
+
+      const alreadyExists = await sellerRequestsCollection.findOne({ email });
+      if (alreadyExists)
+        return res
+          .status(409)
+          .send({ message: "Already Requested, So please wait" });
+
+      const result = await sellerRequestsCollection.insertOne({ email });
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection

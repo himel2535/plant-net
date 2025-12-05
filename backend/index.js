@@ -27,12 +27,12 @@ app.use(express.json());
 // jwt middlewares
 const verifyJWT = async (req, res, next) => {
   const token = req?.headers?.authorization?.split(" ")[1];
-  console.log(token);
+  // console.log(token);
   if (!token) return res.status(401).send({ message: "Unauthorized Access!" });
   try {
     const decoded = await admin.auth().verifyIdToken(token);
     req.tokenEmail = decoded.email;
-    console.log(decoded);
+    // console.log(decoded);
     next();
   } catch (err) {
     console.log(err);
@@ -163,9 +163,9 @@ async function run() {
     });
 
     // --get all orders for a customer by email--
-    app.get("/my-orders/:email", async (req, res) => {
-      const email = req.params.email;
-      const result = await ordersCollection.find({ customer: email }).toArray();
+    app.get("/my-orders",verifyJWT, async (req, res) => {
+
+      const result = await ordersCollection.find({ customer: req.tokenEmail}).toArray();
       res.send(result);
     });
 
@@ -218,9 +218,8 @@ async function run() {
     });
 
     // --get an users role--
-    app.get("/user/role/:email", async (req, res) => {
-      const email = req.params.email;
-      const result = await usersCollection.findOne({ email });
+    app.get("/user/role", verifyJWT, async (req, res) => {
+      const result = await usersCollection.findOne({ email: req.tokenEmail });
       res.send({ role: result?.role });
     });
 

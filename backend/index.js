@@ -193,7 +193,7 @@ async function run() {
 
       userData.created_at = new Date().toISOString();
       userData.last_loggedIn = new Date().toISOString();
-      userData.role='customer'
+      userData.role = "customer";
 
       const query = {
         email: userData.email,
@@ -215,6 +215,13 @@ async function run() {
       console.log("Saving UserInfo...");
       const result = await usersCollection.insertOne(userData);
       res.send(result);
+    });
+
+    // --get an users role--
+    app.get("/user/role/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await usersCollection.findOne({ email });
+      res.send({ role: result?.role });
     });
 
     // Send a ping to confirm a successful connection

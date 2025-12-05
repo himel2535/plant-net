@@ -245,6 +245,12 @@ async function run() {
       res.send(result);
     });
 
+    // get all users  for admin--
+    app.get("/users", verifyJWT, async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
     // --update a user's role--
     app.patch("/update-role", verifyJWT, async (req, res) => {
       const { email, role } = req.body;

@@ -1,15 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import PlantDataRow from "../../../components/Dashboard/TableRows/PlantDataRow";
 import useAuth from "../../../hooks/useAuth";
-import axios from "axios";
+// import axios from "axios";
 import LoadingSpinner from "../../../components/Shared/LoadingSpinner";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const MyInventory = () => {
+  const axiosSecure=useAxiosSecure()
   const { user } = useAuth();
   const { data: plants = [], isLoading } = useQuery({
     queryKey: ["inventory", user?.email],
     queryFn: async () => {
-      const result = await axios(
+      const result = await axiosSecure(
         `${import.meta.env.VITE_API_URL}/my-inventory/${user?.email}`
       );
       return result.data;

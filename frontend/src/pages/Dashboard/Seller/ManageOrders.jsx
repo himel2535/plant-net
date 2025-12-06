@@ -1,15 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import SellerOrderDataRow from "../../../components/Dashboard/TableRows/SellerOrderDataRow";
 import useAuth from "../../../hooks/useAuth";
-import axios from "axios";
+// import axios from "axios";
 import LoadingSpinner from "../../../components/Shared/LoadingSpinner";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const ManageOrders = () => {
   const { user } = useAuth();
+  const axiosSecure=useAxiosSecure()
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders", user?.email],
     queryFn: async () => {
-      const result = await axios(
+      const result = await axiosSecure(
         `${import.meta.env.VITE_API_URL}/manage-orders/${user?.email}`
       );
       return result.data;

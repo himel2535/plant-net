@@ -2,16 +2,18 @@ import { useForm } from "react-hook-form";
 import { imageUpload } from "../../utils";
 import useAuth from "../../hooks/useAuth";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
+// import axios from "axios";
 // import LoadingSpinner from "../Shared/LoadingSpinner";
 import ErrorPage from "../../pages/ErrorPage";
 import toast from "react-hot-toast";
 import { TbFidgetSpinner } from "react-icons/tb";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 // import { ImSpinner9 } from "react-icons/im";
 
 
 const AddPlantForm = () => {
   const { user } = useAuth();
+  const axiosSecure=useAxiosSecure()
 
   // --useMutation hook useCase--
   const {
@@ -21,7 +23,7 @@ const AddPlantForm = () => {
     reset: mutationReset,
   } = useMutation({
     mutationFn: async (payload) =>
-      await axios.post(`${import.meta.env.VITE_API_URL}/plants`, payload),
+      await axiosSecure.post(`${import.meta.env.VITE_API_URL}/plants`, payload),
     onSuccess: (data) => {
       console.log(data);
       toast.success("Successfully added this plant");

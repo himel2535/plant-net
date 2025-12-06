@@ -59,8 +59,33 @@ async function run() {
     const usersCollection = db.collection("users");
     const sellerRequestsCollection = db.collection("sellerRequests");
 
+    // ---verify Role Middleware for admin-->
+    const verifyAdmin = async (req, res, next) => {
+      email = req.tokenEmail;
+      const user = await usersCollection.findOne({ email });
+      if (user?.role !== "admin")
+        return res
+          .status(403)
+          .send({ message: "Only Admin can access", role: user?.role });
+      next();
+    };
+
+    // verify middleware for seller
+    const verifySeller = async (req, res, next) => {
+      const email = req.tokenEmail;
+      const user = await usersCollection.findOne({ email });
+
+      if (user?.role !== "seller") {
+        return res
+          .status(403)
+          .send({ message: "Only seller can access", role: user?.role });
+      }
+
+      next();
+    };
+
     // --create plant from seller--
-    app.post("/plants", async (req, res) => {
+    app.post("/plants", verifyJWT, verifySeller, async (req, res) => {
       const plantData = req.body;
       console.log(plantData);
       const result = await plantsCollection.insertOne(plantData);
@@ -172,22 +197,32 @@ async function run() {
     });
 
     // --get all manage orders for a seller by email--
-    app.get("/manage-orders/:email", async (req, res) => {
-      const email = req.params.email;
-      const result = await ordersCollection
-        .find({ "seller.email": email })
-        .toArray();
-      res.send(result);
-    });
+    app.get(
+      "/manage-orders/:email",
+      verifyJWT,
+      verifySeller,
+      async (req, res) => {
+        const email = req.params.email;
+        const result = await ordersCollection
+          .find({ "seller.email": email })
+          .toArray();
+        res.send(result);
+      }
+    );
 
     // --get all plants for a seller by email--
-    app.get("/my-inventory/:email", async (req, res) => {
-      const email = req.params.email;
-      const result = await plantsCollection
-        .find({ "seller.email": email })
-        .toArray();
-      res.send(result);
-    });
+    app.get(
+      "/my-inventory/:email",
+      verifyJWT,
+      verifySeller,
+      async (req, res) => {
+        const email = req.params.email;
+        const result = await plantsCollection
+          .find({ "seller.email": email })
+          .toArray();
+        res.send(result);
+      }
+    );
 
     // ---save or update user in db-->
     app.post("/user", async (req, res) => {
@@ -240,13 +275,13 @@ async function run() {
     });
 
     // get all seller requests for admin--
-    app.get("/seller-requests", verifyJWT, async (req, res) => {
+    app.get("/seller-requests", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await sellerRequestsCollection.find().toArray();
       res.send(result);
     });
 
     // get all users  for admin--
-    app.get("/users", verifyJWT, async (req, res) => {
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const adminEmail = req.tokenEmail;
       const result = await usersCollection
         .find({ email: { $ne: adminEmail } })
@@ -255,7 +290,7 @@ async function run() {
     });
 
     // --update a user's role--
-    app.patch("/update-role", verifyJWT, async (req, res) => {
+    app.patch("/update-role", verifyJWT, verifyAdmin, async (req, res) => {
       const { email, role } = req.body;
       const result = await usersCollection.updateOne(
         { email },
